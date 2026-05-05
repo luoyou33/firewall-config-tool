@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>防火墙配置翻译工具</title>
+    <link rel="stylesheet" href="src/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>防火墙配置翻译工具</h1>
+            <p class="subtitle">将Excel规划表转换为防火墙配置脚本</p>
+        </header>
+
+        <div class="main-content">
+            <!-- 模板导出区域 -->
+            <div class="template-section">
+                <h2>下载规划表模板</h2>
+                <p class="template-hint">点击下方按钮下载空白模板，填写后上传即可生成配置</p>
+                <div class="template-buttons">
+                    <button class="template-btn policy-template-btn" onclick="downloadTemplate('policy')">
+                        <span class="template-icon">📋</span>
+                        <span>安全策略规划表模板</span>
+                    </button>
+                    <button class="template-btn address-template-btn" onclick="downloadTemplate('address')">
+                        <span class="template-icon">📍</span>
+                        <span>地址对象规划表模板</span>
+                    </button>
+                    <button class="template-btn service-template-btn" onclick="downloadTemplate('service')">
+                        <span class="template-icon">🔌</span>
+                        <span>服务对象规划表模板</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 文件上传区域 -->
+            <div class="upload-section">
+                <h2>上传规划表</h2>
+                <div class="file-inputs">
+                    <div class="file-input-group" id="policy-group">
+                        <label class="file-label policy-label">
+                            <input type="file" accept=".xlsx,.xls" class="file-input" id="policy-file">
+                            <span class="file-icon">📋</span>
+                            <span class="file-text">安全策略规划表</span>
+                        </label>
+                        <span class="file-status" id="policy-status">未上传</span>
+                    </div>
+                    
+                    <div class="file-input-group" id="address-group">
+                        <label class="file-label address-label">
+                            <input type="file" accept=".xlsx,.xls" class="file-input" id="address-file">
+                            <span class="file-icon">📍</span>
+                            <span class="file-text">地址对象规划表</span>
+                        </label>
+                        <span class="file-status" id="address-status">未上传</span>
+                    </div>
+                    
+                    <div class="file-input-group" id="service-group">
+                        <label class="file-label service-label">
+                            <input type="file" accept=".xlsx,.xls" class="file-input" id="service-file">
+                            <span class="file-icon">🔌</span>
+                            <span class="file-text">服务对象规划表</span>
+                        </label>
+                        <span class="file-status" id="service-status">未上传</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常量/变量配置区域 -->
+            <div class="config-section">
+                <h2>常量与变量配置</h2>
+                <div class="config-tabs">
+                    <button class="tab-btn active" data-tab="constants">常量定义</button>
+                    <button class="tab-btn" data-tab="variables">变量映射</button>
+                </div>
+                <div class="tab-content active" id="constants-tab">
+                    <h3>安全策略常量</h3>
+                    <div class="config-grid">
+                        <div class="config-item">
+                            <label>规则名称前缀:</label>
+                            <input type="text" id="const-rule-name-prefix" value="rule name">
+                        </div>
+                        <div class="config-item">
+                            <label>规则名称后缀:</label>
+                            <input type="text" id="const-rule-name-suffix" value="">
+                        </div>
+                        <div class="config-item">
+                            <label>源区域前缀:</label>
+                            <input type="text" id="const-src-zone-prefix" value="source-zone">
+                        </div>
+                        <div class="config-item">
+                            <label>源区域后缀:</label>
+                            <input type="text" id="const-src-zone-suffix" value="">
+                        </div>
+                        <div class="config-item">
+                            <label>目的区域前缀:</label>
+                            <input type="text" id="const-dst-zone-prefix" value="destination-zone">
+                        </div>
+                        <div class="config-item">
+                            <label>目的区域后缀:</label>
+                            <input type="text" id="const-dst-zone-suffix" value="">
+                        </div>
+                        <div class="config-item">
+                            <label>源地址前缀:</label>
+                            <input type="text" id="const-src-addr-prefix" value="source-address">
+                        </div>
+                        <div class="config-item">
+                            <label>源地址后缀:</label>
+                            <input type="text" id="const-src-addr-suffix" value="">
+                        </div>
+                        <div class="config-item">
+                            <label>目的地址前缀:</label>
+                            <input type="text" id="const-dst-addr-prefix" value="destination-address">
+                        </div>
+                        <div class="config-item">
+                            <label>目的地址后缀:</label>
+                            <input type="text" id="const-dst-addr-suffix" value="">
+                        </div>
+                        <div class="config-item">
+                            <label>服务前缀:</label>
+                            <input type="text" id="const-service-prefix" value="service">
+                        </div>
+                        <div class="config-item">
+                            <label>服务后缀:</label>
+                            <input type="text" id="const-service-suffix" value="">
+                        </div>
+                        <div class="config-item">
+                            <label>地址集前缀:</label>
+                            <input type="text" id="const-addr-set" value="address-set">
+                        </div>
+                        <div class="config-item">
+                            <label>默认动作:</label>
+                            <select id="const-action">
+                                <option value="permit">permit</option>
+                                <option value="deny">deny</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3>地址对象常量</h3>
+                    <div class="config-grid">
+                        <div class="config-item">
+                            <label>地址集配置前缀:</label>
+                            <input type="text" id="const-ip-set" value="ip address-set">
+                        </div>
+                        <div class="config-item">
+                            <label>地址类型:</label>
+                            <input type="text" id="const-addr-type" value="type object">
+                        </div>
+                        <div class="config-item">
+                            <label>地址项前缀:</label>
+                            <input type="text" id="const-address" value="address">
+                        </div>
+                    </div>
+                    
+                    <h3>服务对象常量</h3>
+                    <div class="config-grid">
+                        <div class="config-item">
+                            <label>服务集配置前缀:</label>
+                            <input type="text" id="const-svc-set" value="ip service-set">
+                        </div>
+                        <div class="config-item">
+                            <label>服务项前缀:</label>
+                            <input type="text" id="const-service-item" value="service">
+                        </div>
+                    </div>
+                    
+                    <h3>默认配置（可选配）</h3>
+                    <div class="config-grid">
+                        <div class="config-item checkbox-item">
+                            <label class="checkbox-label-inline">
+                                <input type="checkbox" id="enable-policy-log" checked>
+                                <span>启用</span>
+                            </label>
+                            <label>策略日志:</label>
+                            <input type="text" id="const-policy-log" value="policy logging">
+                        </div>
+                        <div class="config-item checkbox-item">
+                            <label class="checkbox-label-inline">
+                                <input type="checkbox" id="enable-session-log" checked>
+                                <span>启用</span>
+                            </label>
+                            <label>会话日志:</label>
+                            <input type="text" id="const-session-log" value="session logging">
+                        </div>
+                        <div class="config-item checkbox-item">
+                            <label class="checkbox-label-inline">
+                                <input type="checkbox" id="enable-av-profile" checked>
+                                <span>启用</span>
+                            </label>
+                            <label>AV配置文件:</label>
+                            <input type="text" id="const-av-profile" value="profile av default">
+                        </div>
+                        <div class="config-item checkbox-item">
+                            <label class="checkbox-label-inline">
+                                <input type="checkbox" id="enable-ips-profile" checked>
+                                <span>启用</span>
+                            </label>
+                            <label>IPS配置文件:</label>
+                            <input type="text" id="const-ips-profile" value="profile ips default">
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="variables-tab">
+                    <p class="hint">变量将自动从上传的Excel表中提取</p>
+                    <div id="variable-list"></div>
+                </div>
+            </div>
+
+            <!-- 生成选项 -->
+            <div class="generate-section">
+                <h2>生成选项</h2>
+                <div class="generate-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="gen-policy" checked>
+                        <span>生成安全策略配置</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="gen-address" checked>
+                        <span>生成地址对象配置</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="gen-service" checked>
+                        <span>生成服务对象配置</span>
+                    </label>
+                </div>
+                <button class="generate-btn" id="generate-btn">生成配置</button>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="result-section">
+                <h2>生成结果</h2>
+                <div class="result-tabs">
+                    <button class="result-tab active" data-result="all">全部配置</button>
+                    <button class="result-tab" data-result="policy">安全策略</button>
+                    <button class="result-tab" data-result="address">地址对象</button>
+                    <button class="result-tab" data-result="service">服务对象</button>
+                </div>
+                <textarea id="result-textarea" readonly></textarea>
+                <div class="result-actions">
+                    <button class="action-btn" id="copy-btn">复制配置</button>
+                    <button class="action-btn" id="download-btn">下载配置</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>防火墙配置翻译工具 v1.0</p>
+        </footer>
+    </div>
+
+    <script src="src/app.js"></script>
+</body>
+</html>
