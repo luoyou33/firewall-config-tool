@@ -1,0 +1,457 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    background: linear-gradient(135deg, #426ACE 0%, #6B8DD6 50%, #8E54E9 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    color: white;
+    padding: 40px 20px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.main-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    padding: 30px;
+}
+
+.template-section, .upload-section, .config-section, .generate-section, .result-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.template-section h2, .upload-section h2, .config-section h2, .generate-section h2, .result-section h2 {
+    color: #426ACE;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #426ACE;
+    padding-bottom: 10px;
+}
+
+.file-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.file-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.file-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px 30px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    width: 100%;
+}
+
+.file-label:hover {
+    border-color: #426ACE;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(66, 106, 206, 0.2);
+}
+
+.file-input {
+    display: none;
+}
+
+.file-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.file-text {
+    font-size: 1rem;
+    color: #666;
+}
+
+.policy-label:hover, .policy-label.dragover {
+    border-color: #28a745;
+    background: #f0fff4;
+}
+
+.address-label:hover, .address-label.dragover {
+    border-color: #17a2b8;
+    background: #f0f8ff;
+}
+
+.service-label:hover, .service-label.dragover {
+    border-color: #ffc107;
+    background: #fffef0;
+}
+
+.file-status {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.file-status.success {
+    color: #28a745;
+}
+
+.config-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    background: #e9ecef;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.tab-btn.active {
+    background: #426ACE;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.config-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.config-item label {
+    width: 120px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.config-item input, .config-item select {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.config-item input:focus, .config-item select:focus {
+    outline: none;
+    border-color: #426ACE;
+    box-shadow: 0 0 0 3px rgba(66, 106, 206, 0.1);
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.checkbox-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checkbox-label-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.checkbox-label-inline input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.config-section h3 {
+    color: #426ACE;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.hint {
+    color: #856404;
+    background: #fff3cd;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.variable-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.variable-section {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #426ACE;
+}
+
+.variable-section h4 {
+    color: #426ACE;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.variable-item {
+    display: inline-block;
+    background: #e9ecef;
+    color: #495057;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin: 3px;
+}
+
+.generate-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #495057;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.generate-btn {
+    background: linear-gradient(135deg, #426ACE 0%, #5B8DEF 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(66, 106, 206, 0.4);
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(66, 106, 206, 0.5);
+}
+
+.generate-btn:active {
+    transform: translateY(0);
+}
+
+.result-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.result-tab {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    background: #e9ecef;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.result-tab.active {
+    background: #426ACE;
+    color: white;
+}
+
+#result-textarea {
+    width: 100%;
+    height: 300px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: vertical;
+    background: #f8f9fa;
+}
+
+.result-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.action-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+#copy-btn {
+    background: #6c757d;
+    color: white;
+}
+
+#copy-btn:hover {
+    background: #5a6268;
+}
+
+#download-btn {
+    background: #28a745;
+    color: white;
+}
+
+#download-btn:hover {
+    background: #218838;
+}
+
+.footer {
+    text-align: center;
+    color: white;
+    padding: 30px;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .file-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .generate-options {
+        flex-direction: column;
+    }
+    
+    .result-actions {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+    }
+}
+
+/* 模板导出区域样式 */
+.template-hint {
+    color: #6c757d;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.template-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.template-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 500;
+    color: white;
+}
+
+.template-icon {
+    font-size: 1.5rem;
+}
+
+.policy-template-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.policy-template-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.address-template-btn {
+    background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
+
+.address-template-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+}
+
+.service-template-btn {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.service-template-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
