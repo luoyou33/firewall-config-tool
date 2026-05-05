@@ -1,0 +1,17 @@
+{
+  "name": "firewall-config-tool",
+  "version": "1.0.0",
+  "description": "防火墙配置翻译工具 - 将Excel规划表转换为防火墙配置脚本",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8080",
+    "build": "mkdir dist && copy index.html dist\\ && xcopy src dist\\src /E /I",
+    "deploy": "gh-pages -d dist"
+  },
+  "keywords": ["firewall", "configuration", "excel", "translation"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
+  }
+}
