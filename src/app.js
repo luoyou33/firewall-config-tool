@@ -138,11 +138,13 @@ function switchResultTab(e) {
 function parseIPAddress(ipStr) {
     const results = [];
     
-    // 处理逗号分隔的多个IP
-    if (ipStr.includes(',')) {
-        const ips = ipStr.split(',').map(ip => ip.trim());
+    // 处理逗号分隔的多个IP（支持英文逗号和中文逗号）
+    if (ipStr.includes(',') || ipStr.includes('，')) {
+        const ips = ipStr.split(/[,，]/).map(ip => ip.trim()).filter(ip => ip);
         ips.forEach((ip, index) => {
-            results.push(`address ${index} ${ip} mask 32`);
+            // 对每个IP递归处理，支持多种格式
+            const subResults = parseSingleIP(ip, index);
+            results.push(...subResults);
         });
     }
     // 处理IP范围（使用—或-连接）
@@ -171,6 +173,36 @@ function parseIPAddress(ipStr) {
     return results;
 }
 
+// 处理单个IP地址
+function parseSingleIP(ipStr, baseIndex = 0) {
+    const results = [];
+    
+    // 处理IP范围
+    if (ipStr.includes('—') || ipStr.includes('-')) {
+        const regex = /([\d.]+)[—-]([\d.]+)/;
+        const match = ipStr.match(regex);
+        if (match) {
+            results.push(`address ${baseIndex} range ${match[1]} ${match[2]}`);
+        } else {
+            results.push(`address ${baseIndex} ${ipStr} mask 32`);
+        }
+    }
+    // 处理CIDR格式
+    else if (ipStr.includes('/')) {
+        const parts = ipStr.split('/');
+        const ip = parts[0].trim();
+        const prefix = parseInt(parts[1]);
+        const mask = cidrToMask(prefix);
+        results.push(`address ${baseIndex} ${ip} mask ${mask}`);
+    }
+    // 单个IP地址
+    else {
+        results.push(`address ${baseIndex} ${ipStr} mask 32`);
+    }
+    
+    return results;
+}
+
 // CIDR转子网掩码
 function cidrToMask(cidr) {
     const mask = [];
@@ -181,13 +213,59 @@ function cidrToMask(cidr) {
     return mask.join('.');
 }
 
+// 验证IP地址是否在有效范围内
+function isValidIP(ip) {
+    const parts = ip.split('.');
+    if (parts.length !== 4) return false;
+    for (let part of parts) {
+        const num = parseInt(part);
+        if (isNaN(num) || num < 0 || num > 255) return false;
+    }
+    return true;
+}
+
+// 解析单个地址对象
+// 返回格式: { type: 'cidr' | 'range' | 'group' | 'single', value: string }
+function parseAddressObject(ipStr) {
+    // 去除首尾空格
+    ipStr = ipStr.trim();
+    
+    // 检查是否为CIDR格式 (xx.xx.xx.xx/掩码)
+    const cidrMatch = ipStr.match(/^([\d.]+)\/(\d{1,2})$/);
+    if (cidrMatch) {
+        const ip = cidrMatch[1];
+        const prefix = parseInt(cidrMatch[2]);
+        if (isValidIP(ip) && prefix >= 0 && prefix <= 32) {
+            return { type: 'cidr', value: { ip, prefix } };
+        }
+    }
+    
+    // 检查是否为地址范围格式 (xx.xx.xx.xx-yy.yy.yy.yy)
+    const rangeMatch = ipStr.match(/^([\d.]+)-([\d.]+)$/);
+    if (rangeMatch) {
+        const startIP = rangeMatch[1];
+        const endIP = rangeMatch[2];
+        if (isValidIP(startIP) && isValidIP(endIP)) {
+            return { type: 'range', value: { startIP, endIP } };
+        }
+    }
+    
+    // 检查是否为单个IP地址
+    if (isValidIP(ipStr)) {
+        return { type: 'single', value: ipStr };
+    }
+    
+    // 否则判断为地址组对象
+    return { type: 'group', value: ipStr };
+}
+
 // 解析服务端口
 function parseServicePort(portStr) {
     const results = [];
     
-    // 处理多个服务（逗号分隔）
-    if (portStr.includes(',')) {
-        const ports = portStr.split(',').map(p => p.trim());
+    // 处理多个服务（逗号分隔，支持英文逗号和中文逗号）
+    if (portStr.includes(',') || portStr.includes('，')) {
+        const ports = portStr.split(/[,，]/).map(p => p.trim()).filter(p => p);
         ports.forEach((port, index) => {
             const parsed = parseSinglePort(port, index);
             if (parsed) results.push(parsed);
@@ -405,18 +483,31 @@ function generatePolicyConfig() {
         const srcIPs = srcIP.split(/[,，]/).map(ip => ip.trim()).filter(ip => ip && ip !== 'any');
         if (srcIPs.length > 0) {
             srcIPs.forEach(ip => {
-                if (ip.startsWith('IP组')) {
-                    config += `  ${rowConstants.srcAddrPrefix} ${rowConstants.addrSet} ${ip}${rowConstants.srcAddrSuffix ? ' ' + rowConstants.srcAddrSuffix : ''}\n`;
-                } else {
-                    // 处理单个IP或CIDR
-                    if (ip.includes('/')) {
-                        const parts = ip.split('/');
-                        const mask = cidrToMask(parseInt(parts[1]));
-                        config += `  ${rowConstants.srcAddrPrefix} ${parts[0]} mask ${mask}${rowConstants.srcAddrSuffix ? ' ' + rowConstants.srcAddrSuffix : ''}\n`;
-                    } else {
-                        config += `  ${rowConstants.srcAddrPrefix} ${ip} mask 255.255.255.255${rowConstants.srcAddrSuffix ? ' ' + rowConstants.srcAddrSuffix : ''}\n`;
-                    }
+                const parsed = parseAddressObject(ip);
+                let line = '';
+                
+                switch (parsed.type) {
+                    case 'cidr':
+                        // CIDR格式：前缀 xx.xx.xx.xx mask 掩码
+                        const cidrMask = cidrToMask(parsed.value.prefix);
+                        line = `${rowConstants.srcAddrPrefix} ${parsed.value.ip} mask ${cidrMask}`;
+                        break;
+                    case 'range':
+                        // 地址范围格式：前缀 range xx.xx.xx.xx yy.yy.yy.yy
+                        line = `${rowConstants.srcAddrPrefix} range ${parsed.value.startIP} ${parsed.value.endIP}`;
+                        break;
+                    case 'single':
+                        // 单个IP：前缀 xx.xx.xx.xx mask 255.255.255.255
+                        line = `${rowConstants.srcAddrPrefix} ${parsed.value} mask 255.255.255.255`;
+                        break;
+                    case 'group':
+                    default:
+                        // 地址组对象：前缀 address-set 地址组名称
+                        line = `${rowConstants.srcAddrPrefix} ${rowConstants.addrSet} ${parsed.value}`;
+                        break;
                 }
+                
+                config += `  ${line}${rowConstants.srcAddrSuffix ? ' ' + rowConstants.srcAddrSuffix : ''}\n`;
             });
         } else if (srcIP === 'any') {
             config += `  ${rowConstants.srcAddrPrefix} any${rowConstants.srcAddrSuffix ? ' ' + rowConstants.srcAddrSuffix : ''}\n`;
@@ -426,17 +517,31 @@ function generatePolicyConfig() {
         const dstIPs = dstIP.split(/[,，]/).map(ip => ip.trim()).filter(ip => ip && ip !== 'any');
         if (dstIPs.length > 0) {
             dstIPs.forEach(ip => {
-                if (ip.startsWith('IP组')) {
-                    config += `  ${rowConstants.dstAddrPrefix} ${rowConstants.addrSet} ${ip}${rowConstants.dstAddrSuffix ? ' ' + rowConstants.dstAddrSuffix : ''}\n`;
-                } else {
-                    if (ip.includes('/')) {
-                        const parts = ip.split('/');
-                        const mask = cidrToMask(parseInt(parts[1]));
-                        config += `  ${rowConstants.dstAddrPrefix} ${parts[0]} mask ${mask}${rowConstants.dstAddrSuffix ? ' ' + rowConstants.dstAddrSuffix : ''}\n`;
-                    } else {
-                        config += `  ${rowConstants.dstAddrPrefix} ${ip} mask 255.255.255.255${rowConstants.dstAddrSuffix ? ' ' + rowConstants.dstAddrSuffix : ''}\n`;
-                    }
+                const parsed = parseAddressObject(ip);
+                let line = '';
+                
+                switch (parsed.type) {
+                    case 'cidr':
+                        // CIDR格式：前缀 xx.xx.xx.xx mask 掩码
+                        const cidrMask = cidrToMask(parsed.value.prefix);
+                        line = `${rowConstants.dstAddrPrefix} ${parsed.value.ip} mask ${cidrMask}`;
+                        break;
+                    case 'range':
+                        // 地址范围格式：前缀 range xx.xx.xx.xx yy.yy.yy.yy
+                        line = `${rowConstants.dstAddrPrefix} range ${parsed.value.startIP} ${parsed.value.endIP}`;
+                        break;
+                    case 'single':
+                        // 单个IP：前缀 xx.xx.xx.xx mask 255.255.255.255
+                        line = `${rowConstants.dstAddrPrefix} ${parsed.value} mask 255.255.255.255`;
+                        break;
+                    case 'group':
+                    default:
+                        // 地址组对象：前缀 address-set 地址组名称
+                        line = `${rowConstants.dstAddrPrefix} ${rowConstants.addrSet} ${parsed.value}`;
+                        break;
                 }
+                
+                config += `  ${line}${rowConstants.dstAddrSuffix ? ' ' + rowConstants.dstAddrSuffix : ''}\n`;
             });
         } else if (dstIP === 'any') {
             config += `  ${rowConstants.dstAddrPrefix} any${rowConstants.dstAddrSuffix ? ' ' + rowConstants.dstAddrSuffix : ''}\n`;
